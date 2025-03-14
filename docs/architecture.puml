@@ -1,0 +1,64 @@
+@startuml Secure Web Application Architecture
+
+!define AWSPUML https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v14.0/dist
+!include AWSPUML/AWSCommon.puml
+!include AWSPUML/SecurityIdentityCompliance/WAF.puml
+!include AWSPUML/Containers/EKS.puml
+!include AWSPUML/NetworkingContentDelivery/VPC.puml
+!include AWSPUML/SecurityIdentityCompliance/IAM.puml
+!include AWSPUML/ManagementGovernance/CloudWatch.puml
+
+skinparam componentStyle uml2
+
+title XNL Innovations Secure Web Application Architecture
+
+cloud "AWS Cloud" {
+  WAF(waf, "AWS WAF", "Web Application Firewall")
+  
+  rectangle "VPC" {
+    EKS(eks, "EKS Cluster", "Kubernetes Cluster")
+    
+    package "Frontend" {
+      [React App] as frontend
+      note right of frontend
+        - JWT Authentication
+        - XSS Prevention
+        - CSRF Protection
+        - Security Headers
+      end note
+    }
+    
+    package "Backend" {
+      [Node.js API] as backend
+      note right of backend
+        - Rate Limiting
+        - Input Validation
+        - JWT Verification
+        - 2FA
+      end note
+    }
+    
+    database "MongoDB Atlas" {
+      [Secure Database] as db
+      note right of db
+        - Encryption at Rest
+        - Network Security
+        - Access Controls
+      end note
+    }
+  }
+  
+  CloudWatch(monitoring, "CloudWatch", "Monitoring & Alerts")
+  IAM(iam, "IAM", "Access Management")
+}
+
+actor "User" as user
+
+user --> waf
+waf --> frontend
+frontend --> backend
+backend --> db
+monitoring --> eks
+iam --> eks
+
+@enduml 
