@@ -1,67 +1,71 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
-import { useFormik, FormikHelpers } from 'formik';
-import * as yup from 'yup';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import {
   Container,
   Box,
-  Typography,
   TextField,
   Button,
+  Typography,
   Link,
   Alert,
   Paper,
-  CircularProgress,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-
-interface FormValues {
-  email: string;
-  password: string;
-}
-
-interface LocationState {
-  from: {
-    pathname: string;
-  };
-}
-
-const validationSchema = yup.object({
-  email: yup
-    .string()
-    .email('Enter a valid email')
-    .required('Email is required'),
-  password: yup
-    .string()
-    .min(8, 'Password should be of minimum 8 characters length')
-    .required('Password is required'),
-});
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [attempts, setAttempts] = useState<number>(0);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
-  const from = (location.state as LocationState)?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/dashboard';
 
-  const formik = useFormik<FormValues>({
+  const formik = useFormik({
     initialValues: {
       email: '',
       password: '',
     },
-    validationSchema: validationSchema,
-    onSubmit: async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+    validationSchema: Yup.object({
+      email: Yup.string()
+        .email('Invalid email address')
+        .required('Email is required'),
+      password: Yup.string()
+        .min(8, 'Password must be at least 8 characters')
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        )
+        .required('Password is required'),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      if (isLocked) {
+        setError('Too many failed attempts. Please try again later.');
+        return;
+      }
+
       try {
         setError('');
-        setLoading(true);
         await login(values.email, values.password);
         navigate(from, { replace: true });
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to log in');
+      } catch (err) {
+        console.error('Login error:', err);
+        setAttempts(prev => {
+          const newAttempts = prev + 1;
+          if (newAttempts >= 5) {
+            setIsLocked(true);
+            setTimeout(() => {
+              setIsLocked(false);
+              setAttempts(0);
+            }, 300000); // 5 minutes lockout
+          }
+          return newAttempts;
+        });
+        setError('Invalid email or password');
       } finally {
-        setLoading(false);
         setSubmitting(false);
       }
     },
@@ -90,11 +94,19 @@ const Login: React.FC = () => {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
+
           {error && (
             <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
               {error}
             </Alert>
           )}
+
+          {isLocked && (
+            <Alert severity="warning" sx={{ width: '100%', mt: 2 }}>
+              Account temporarily locked. Please try again in 5 minutes.
+            </Alert>
+          )}
+
           <Box
             component="form"
             onSubmit={formik.handleSubmit}
@@ -102,19 +114,22 @@ const Login: React.FC = () => {
           >
             <TextField
               margin="normal"
+              required
               fullWidth
               id="email"
-              name="email"
               label="Email Address"
+              name="email"
               autoComplete="email"
               autoFocus
               value={formik.values.email}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={formik.touched.email && Boolean(formik.errors.email)}
               helperText={formik.touched.email && formik.errors.email}
             />
             <TextField
               margin="normal"
+              required
               fullWidth
               name="password"
               label="Password"
@@ -123,6 +138,7 @@ const Login: React.FC = () => {
               autoComplete="current-password"
               value={formik.values.password}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={formik.touched.password && Boolean(formik.errors.password)}
               helperText={formik.touched.password && formik.errors.password}
             />
@@ -131,9 +147,9 @@ const Login: React.FC = () => {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
+              disabled={formik.isSubmitting || isLocked}
             >
-              {loading ? <CircularProgress size={24} /> : 'Sign In'}
+              Sign In
             </Button>
             <Box sx={{ textAlign: 'center' }}>
               <Link component={RouterLink} to="/register" variant="body2">

@@ -1,55 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useFormik } from 'formik';
-import * as yup from 'yup';
+import * as Yup from 'yup';
 import {
   Container,
   Box,
-  Typography,
   TextField,
   Button,
+  Typography,
   Link,
   Alert,
   Paper,
-  CircularProgress,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-
-interface FormValues {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-const validationSchema = yup.object({
-  name: yup
-    .string()
-    .min(2, 'Name should be of minimum 2 characters length')
-    .required('Name is required'),
-  email: yup
-    .string()
-    .email('Enter a valid email')
-    .required('Email is required'),
-  password: yup
-    .string()
-    .min(8, 'Password should be of minimum 8 characters length')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'
-    )
-    .required('Password is required'),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref('password')], 'Passwords must match')
-    .required('Confirm Password is required'),
-});
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -58,17 +26,35 @@ const Register: React.FC = () => {
       password: '',
       confirmPassword: '',
     },
-    validationSchema: validationSchema,
-    onSubmit: async (values: FormValues) => {
+    validationSchema: Yup.object({
+      name: Yup.string()
+        .min(2, 'Name must be at least 2 characters')
+        .max(50, 'Name must be less than 50 characters')
+        .required('Name is required'),
+      email: Yup.string()
+        .email('Invalid email address')
+        .required('Email is required'),
+      password: Yup.string()
+        .min(8, 'Password must be at least 8 characters')
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        )
+        .required('Password is required'),
+      confirmPassword: Yup.string()
+        .oneOf([Yup.ref('password')], 'Passwords must match')
+        .required('Confirm password is required'),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
       try {
         setError('');
-        setLoading(true);
-        await register(values.name, values.email, values.password);
-        navigate('/login');
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to create an account');
+        await register(values.email, values.password, values.name);
+        navigate('/dashboard', { replace: true });
+      } catch (err) {
+        console.error('Registration error:', err);
+        setError('Failed to create an account. Email might already be in use.');
       } finally {
-        setLoading(false);
+        setSubmitting(false);
       }
     },
   });
@@ -96,11 +82,13 @@ const Register: React.FC = () => {
           <Typography component="h1" variant="h5">
             Sign up
           </Typography>
+
           {error && (
             <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
               {error}
             </Alert>
           )}
+
           <Box
             component="form"
             onSubmit={formik.handleSubmit}
@@ -108,31 +96,36 @@ const Register: React.FC = () => {
           >
             <TextField
               margin="normal"
+              required
               fullWidth
               id="name"
-              name="name"
               label="Full Name"
+              name="name"
               autoComplete="name"
               autoFocus
               value={formik.values.name}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={formik.touched.name && Boolean(formik.errors.name)}
               helperText={formik.touched.name && formik.errors.name}
             />
             <TextField
               margin="normal"
+              required
               fullWidth
               id="email"
-              name="email"
               label="Email Address"
+              name="email"
               autoComplete="email"
               value={formik.values.email}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={formik.touched.email && Boolean(formik.errors.email)}
               helperText={formik.touched.email && formik.errors.email}
             />
             <TextField
               margin="normal"
+              required
               fullWidth
               name="password"
               label="Password"
@@ -141,11 +134,13 @@ const Register: React.FC = () => {
               autoComplete="new-password"
               value={formik.values.password}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={formik.touched.password && Boolean(formik.errors.password)}
               helperText={formik.touched.password && formik.errors.password}
             />
             <TextField
               margin="normal"
+              required
               fullWidth
               name="confirmPassword"
               label="Confirm Password"
@@ -154,6 +149,7 @@ const Register: React.FC = () => {
               autoComplete="new-password"
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               error={
                 formik.touched.confirmPassword &&
                 Boolean(formik.errors.confirmPassword)
@@ -167,13 +163,13 @@ const Register: React.FC = () => {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
+              disabled={formik.isSubmitting}
             >
-              {loading ? <CircularProgress size={24} /> : 'Sign Up'}
+              Sign Up
             </Button>
             <Box sx={{ textAlign: 'center' }}>
               <Link component={RouterLink} to="/login" variant="body2">
-                {'Already have an account? Sign in'}
+                Already have an account? Sign in
               </Link>
             </Box>
           </Box>

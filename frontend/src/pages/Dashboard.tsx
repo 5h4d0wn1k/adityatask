@@ -1,216 +1,151 @@
 import React from 'react';
 import {
+  Container,
   Box,
-  Grid,
-  Paper,
   Typography,
+  Paper,
+  Grid,
   Card,
   CardContent,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  Button,
   Divider,
 } from '@mui/material';
-import {
-  Security as SecurityIcon,
-  Lock as LockIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-  Info as InfoIcon,
-  Schedule as ScheduleIcon,
-} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-
-interface SecurityMetric {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-}
+import SecurityIcon from '@mui/icons-material/Security';
+import PersonIcon from '@mui/icons-material/Person';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const securityMetrics: SecurityMetric[] = [
-    {
-      title: 'Security Score',
-      value: 85,
-      icon: <SecurityIcon />,
-      color: '#2196f3',
-    },
-    {
-      title: 'Password Strength',
-      value: 90,
-      icon: <LockIcon />,
-      color: '#4caf50',
-    },
-    {
-      title: 'Vulnerabilities',
-      value: 20,
-      icon: <WarningIcon />,
-      color: '#f44336',
-    },
-    {
-      title: 'Security Checks',
-      value: 95,
-      icon: <CheckCircleIcon />,
-      color: '#9c27b0',
-    },
-  ];
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
-  const recentEvents = [
-    {
-      title: 'Login from new device',
-      description: 'Windows PC - Chrome Browser',
-      time: '2 hours ago',
-      icon: <InfoIcon color="info" />,
-    },
-    {
-      title: 'Password changed',
-      description: 'Security update successful',
-      time: '1 day ago',
-      icon: <LockIcon color="success" />,
-    },
-    {
-      title: 'Security scan completed',
-      description: 'No critical issues found',
-      time: '2 days ago',
-      icon: <SecurityIcon color="primary" />,
-    },
-  ];
-
-  const securityRecommendations = [
-    'Enable two-factor authentication for enhanced security',
-    'Update your password regularly',
-    'Review recent login activity',
-    'Complete security awareness training',
-  ];
+  const handleAdminPanel = () => {
+    navigate('/admin');
+  };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Welcome back, {user?.name}!
-      </Typography>
-
-      <Grid container spacing={3}>
-        {securityMetrics.map((metric) => (
-          <Grid item xs={12} sm={6} md={3} key={metric.title}>
-            <Paper
-              sx={{
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                height: 140,
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  mb: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    backgroundColor: `${metric.color}20`,
-                    borderRadius: '50%',
-                    p: 1,
-                    mr: 1,
-                    color: metric.color,
-                  }}
+    <Container component="main" maxWidth="lg">
+      <Box
+        sx={{
+          marginTop: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            width: '100%',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 4,
+            }}
+          >
+            <Typography component="h1" variant="h4">
+              Welcome, {user?.name}
+            </Typography>
+            <Box>
+              {user?.role === 'admin' && (
+                <Button
+                  startIcon={<AdminPanelSettingsIcon />}
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAdminPanel}
+                  sx={{ mr: 2 }}
                 >
-                  {metric.icon}
-                </Box>
-                <Typography variant="h6" component="div">
-                  {metric.title}
-                </Typography>
-              </Box>
-              <Typography variant="h4" component="div" sx={{ mb: 1 }}>
-                {metric.value}%
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={metric.value}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: `${metric.color}20`,
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: metric.color,
-                  },
-                }}
-              />
-            </Paper>
+                  Admin Panel
+                </Button>
+              )}
+              <Button
+                startIcon={<ExitToAppIcon />}
+                variant="outlined"
+                color="primary"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      mb: 2,
+                    }}
+                  >
+                    <PersonIcon sx={{ mr: 1 }} />
+                    <Typography variant="h6">User Information</Typography>
+                  </Box>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Name:</strong> {user?.name}
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Email:</strong> {user?.email}
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    <strong>Role:</strong> {user?.role}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      mb: 2,
+                    }}
+                  >
+                    <SecurityIcon sx={{ mr: 1 }} />
+                    <Typography variant="h6">Security Information</Typography>
+                  </Box>
+                  <Typography variant="body1" gutterBottom>
+                    Your session is secure and encrypted. All communications are
+                    protected using HTTPS.
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    For security reasons, your session will automatically expire
+                    after a period of inactivity.
+                  </Typography>
+                  <Typography variant="body1">
+                    If you notice any suspicious activity, please contact the
+                    administrator immediately.
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-        ))}
-      </Grid>
-
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Security Events
-              </Typography>
-              <List>
-                {recentEvents.map((event, index) => (
-                  <React.Fragment key={index}>
-                    <ListItem>
-                      <ListItemIcon>{event.icon}</ListItemIcon>
-                      <ListItemText
-                        primary={event.title}
-                        secondary={
-                          <>
-                            {event.description}
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ display: 'block' }}
-                            >
-                              <ScheduleIcon
-                                sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }}
-                              />
-                              {event.time}
-                            </Typography>
-                          </>
-                        }
-                      />
-                    </ListItem>
-                    {index < recentEvents.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Security Recommendations
-              </Typography>
-              <List>
-                {securityRecommendations.map((recommendation, index) => (
-                  <React.Fragment key={index}>
-                    <ListItem>
-                      <ListItemIcon>
-                        <InfoIcon color="info" />
-                      </ListItemIcon>
-                      <ListItemText primary={recommendation} />
-                    </ListItem>
-                    {index < securityRecommendations.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 
