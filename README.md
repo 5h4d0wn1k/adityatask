@@ -1,164 +1,103 @@
-# XNL Innovations Secure Web Application
+# AdityaTask — Secure Full-Stack Web Application
 
-A highly secure web application with real-time security measures, comprehensive penetration testing, and security audits.
+[![CI/CD](https://github.com/5h4d0wn1k/adityatask/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/5h4d0wn1k/adityatask/actions/workflows/ci-cd.yml)
+[![last commit](https://img.shields.io/github/last-commit/5h4d0wn1k/adityatask)](https://github.com/5h4d0wn1k/adityatask)
+[![issues](https://img.shields.io/github/issues/5h4d0wn1k/adityatask)](https://github.com/5h4d0wn1k/adityatask)
 
-## 🔒 Security Features
+A security-hardened full-stack web application in TypeScript: React + Material
+UI frontend, Express + MongoDB backend, and CI/CD that runs OWASP ZAP and Snyk
+security scanning on every push.
 
-- JWT-based authentication with refresh tokens
-- Two-factor authentication (2FA)
-- CSRF protection
-- XSS prevention with Content Security Policy
-- SQL injection protection
-- Rate limiting
-- Secure session management
-- Role-based Access Control (RBAC)
-- Security headers implementation
-- Network policies for secure pod communication
+## Why
 
-## 🏗️ Architecture
+Most starter apps ship with permissive defaults. This project demonstrates what
+a production-grade authentication and security posture looks like when
+architecture decisions are made defense-first: JWT access/refresh tokens,
+CSRF protection, per-IP rate limiting, input validation, RBAC, and automated
+security scanning in the pipeline. It is a reusable secure shell for building
+task and account-management products on Node.js, TypeScript, and MongoDB —
+useful both as a learning reference for secure full-stack development and as a
+starting point for applications that must pass security review.
 
-The application follows a microservices architecture with:
+## Features
 
-- Frontend: React.js with Material-UI
-- Backend: Node.js with Express
-- Database: MongoDB
-- Container Orchestration: Kubernetes
-- CI/CD: GitHub Actions
+- **JWT authentication** (access + refresh tokens) with `register`, `login`,
+  `refresh-token`, `logout`, and `validate` endpoints; passwords hashed with
+  bcrypt.
+- **Account hardening** — login-attempt tracking with lockout fields, password
+  reset tokens, password-change invalidation, and a 2FA-ready user model.
+- **Security middleware** — Helmet headers, CORS, CSRF token protection,
+  `express-rate-limit`, 10kb request body limits, and output compression.
+- **Input validation** — `express-validator` schemas for registration, login,
+  profile, and password changes.
+- **Role-based access control** — `restrictTo` middleware guards admin-only
+  security endpoints (`/security/metrics`, `/security/scan`,
+  `/security/vulnerabilities`).
+- **React + Material UI frontend** — Formik + Yup forms, axios client,
+  `jwt-decode`, and react-router navigation.
+- **CI/CD with security scanning** — GitHub Actions runs an OWASP ZAP full
+  scan and a Snyk dependency audit (`npm audit && snyk test`) on every push.
+- **Deployment tooling** — `docker-compose` (frontend/backend/MongoDB),
+  Kubernetes manifests (`k8s/`), and Terraform AWS provisioning.
 
-## 🚀 Getting Started
+## Quickstart
 
 ### Prerequisites
 
-- Node.js 18+
-- Docker
-- Kubernetes cluster
-- MongoDB
+- Node.js 18+, Docker, and a running MongoDB instance (or `mongodb` service).
 
-### Local Development
+### Run locally
 
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/XNL-21BCEXXXX-SDE-6.git
-cd XNL-21BCEXXXX-SDE-6
-```
-
-2. Install dependencies:
-```bash
-# Frontend
-cd frontend
-npm install
-
-# Backend
-cd ../backend
-npm install
-```
-
-3. Set up environment variables:
 ```bash
 # Backend
-cp .env.example .env
-# Update the environment variables with your values
-```
-
-4. Run the application:
-```bash
-# Using Docker Compose
-docker-compose up
-
-# Without Docker
-# Terminal 1
-cd frontend
-npm start
-
-# Terminal 2
 cd backend
+cp .env.example .env   # set MONGO_URI, JWT_SECRET, etc.
+npm install
 npm run dev
+
+# Frontend (new terminal)
+cd frontend
+npm install
+npm start
 ```
 
-### Production Deployment
+Backend runs on `http://localhost:5000`, frontend on `http://localhost:3000`.
 
-1. Build Docker images:
-```bash
-docker build -t secure-app-frontend:latest ./frontend
-docker build -t secure-app-backend:latest ./backend
-```
-
-2. Deploy to Kubernetes:
-```bash
-kubectl apply -f k8s/
-```
-
-## 🛡️ Security Configuration
-
-### Frontend Security
-
-- Content Security Policy (CSP)
-- Secure cookie handling
-- Input validation and sanitization
-- HTTPS enforcement
-- Security headers
-
-### Backend Security
-
-- JWT authentication
-- Rate limiting
-- CSRF protection
-- XSS prevention
-- Secure session management
-- Input validation
-- Error handling
-
-### Database Security
-
-- Encrypted connections
-- Access control
-- Regular backups
-- Audit logging
-
-## 🔍 Security Testing
-
-### Static Analysis
+### Run with Docker Compose
 
 ```bash
-# Run SonarQube analysis
-npm run sonar
-
-# Run OWASP Dependency Check
-npm run security-check
+# root .env supplies MONGO_ROOT_USERNAME / MONGO_ROOT_PASSWORD
+docker compose up
 ```
 
-### Penetration Testing
+### Security scanning
 
-1. Install OWASP ZAP
-2. Configure target URL
-3. Run automated scan
-4. Review and fix vulnerabilities
+```bash
+npm run security-check   # npm audit + snyk test (backend)
+bash security/zap-scan.sh   # OWASP ZAP automated scan
+```
 
-## 📝 Documentation
+## Documentation
 
-- [API Documentation](./docs/api.md)
-- [Security Measures](./docs/security.md)
-- [Deployment Guide](./docs/deployment.md)
-- [Testing Guide](./docs/testing.md)
+- [Security audit](./docs/security-audit.md)
+- [Architecture diagram](./docs/architecture.puml)
 
-## 🔐 Security Best Practices
+## Project structure
 
-1. Regular security updates
-2. Strong password policies
-3. Two-factor authentication
-4. Regular security audits
-5. Secure code review process
-6. Automated security testing
-7. Incident response plan
+```
+frontend/       React + TypeScript + Material UI client
+backend/        Express + TypeScript API (src/ with routes, controllers, middleware)
+k8s/            Kubernetes deployment manifests
+terraform/      AWS provisioning
+security/       OWASP ZAP + JMeter load-test tooling
+```
 
-## 🚨 Security Reporting
+## Contributing
 
-Report security vulnerabilities to security@xnl-innovations.com
+Contributions are welcome. Please follow the existing patterns, keep the test
+suite green (`npm test`), and run the linter before opening a PR.
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests. 
+The repository declares MIT in its README but does not yet ship a `LICENSE`
+file; confirm terms with the owner before reuse.
