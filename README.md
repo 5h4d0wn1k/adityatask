@@ -99,5 +99,5 @@ suite green (`npm test`), and run the linter before opening a PR.
 
 ## License
 
-The repository declares MIT in its README but does not yet ship a `LICENSE`
-file; confirm terms with the owner before reuse.
+Proprietary - see LICENSE
+
